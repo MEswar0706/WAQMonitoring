@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Carbon Tracking</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ctstyles.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Carbon Tracking Dashboard</h1>
+        
+        <!-- Form to log daily carbon consumption -->
+        <div class="form-section">
+            <h2>Submit Daily Consumption Details</h2>
+            <form method="POST" action="{{ url_for('track_carbon') }}">
+                <div class="form-group">
+                    <label for="transportation">Transportation (km):</label>
+                    <input type="number" name="transportation_km" id="transportation_km" value="10" required>
+                    <label for="transportation_mode">Mode of Transport:</label>
+                    <select name="transportation_mode" id="transportation_mode" required>
+                        <option value="car" selected>Car</option>
+                        <option value="bus">Bus</option>
+                        <option value="bike">Bike</option>
+                    </select>
+                    
+                </div>
+                <div class="form-group">
+                    <label for="electricity">Electricity:</label>
+                    <input type="number" name="electricity_prev_month" id="electricity_prev_month" placeholder="Previous Month (kWh)" required>
+                    <input type="number" name="electricity_today" id="electricity_today" placeholder="Today's Usage (kWh)" required>
+                </div>
+                <div class="form-group">
+                    <label for="waste">Waste:</label>
+                    <input type="number" name="dry_waste" id="dry_waste" placeholder="Dry Waste (kg)" required>
+                    <input type="number" name="wet_waste" id="wet_waste" placeholder="Wet Waste (kg)" required>
+                </div>
+                <button type="submit" class="btn btn-success">Calculate Carbon Footprint</button>
+            </form>
+        </div>
+
+        <!-- Leaderboard section -->
+        <div class="leaderboard-section">
+            <h2>Leaderboard</h2>
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>User</th>
+                        <th>City</th>
+                        <th>Total Carbon Footprint (kgCO2e)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in leaderboard_data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ entry.user.username }}</td>
+                        <td>{{ entry.city }}</td>
+                        <td>{{ entry.totalCarbonFootprint }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Historical Data Visualization -->
+        <div class="charts-section">
+            <h2>Historical Data Trends</h2>
+            <div id="carbon-footprint-chart"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // Plotly code to generate charts
+        var carbonData = {{ carbon_data | safe }};
+        
+        var trace1 = {
+            x: carbonData.dates,
+            y: carbonData.transportation,
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Transportation'
+        };
+        
+        var trace2 = {
+            x: carbonData.dates,
+            y: carbonData.electricity,
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Electricity'
+        };
+        
+        var trace3 = {
+            x: carbonData.dates,
+            y: carbonData.water,
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Water'
+        };
+        
+        var data = [trace1, trace2, trace3];
+        
+        var layout = {
+            title: 'Carbon Footprint Over Time',
+            xaxis: { title: 'Date' },
+            yaxis: { title: 'Carbon Footprint (kg CO2)' }
+        };
+        
+        Plotly.newPlot('carbon-footprint-chart', data, layout);
+    </script>
+</body>
+</html>
